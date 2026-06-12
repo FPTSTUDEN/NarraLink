@@ -18,10 +18,12 @@ services:
       - FLOCI_LAMBDA_RUNTIME=provided.al2
       - FLOCI_LAMBDA_CONTAINER_RUNTIME=docker
     volumes:
-      - ./data/s3:/data/s3
-      - ./data/dynamodb:/data/dynamodb
-      - ./data/lambda:/data/lambda
-      - ./processor:/lambda-mount  # Mount local lambda code
+      - /var/run/docker.sock:/var/run/docker.sock  # Allow Floci to manage Lambda containers
+      # - ./data/s3:/data/s3
+      # - ./data/dynamodb:/data/dynamodb
+      # - ./data/lambda:/data/lambda
+      # - ./processor:/lambda-mount  # Mount local lambda code
+      - ./data:/app/data
     restart: unless-stopped
     networks:
       - narrative-network
