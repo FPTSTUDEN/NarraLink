@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# scripts/send_test_events.py
 """
 Send a variety of test events to verify ingestion pipeline.
 """

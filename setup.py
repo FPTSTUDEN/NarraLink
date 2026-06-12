@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# setup.py
 """
 Complete infrastructure setup for Personal Narrative Engine.
 Creates all AWS resources: S3, Kinesis, DynamoDB, Lambda, and Event Source Mapping.

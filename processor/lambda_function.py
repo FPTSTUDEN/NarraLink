@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# processor/lambda_function.py
 """
 Lambda function for processing Kinesis events and generating narratives.
 Fixed: Proper Kinesis → Lambda trigger with DynamoDB storage.

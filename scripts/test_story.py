@@ -1,6 +1,9 @@
 import os
 import json
 import boto3
+# scripts/test_story.py
+"""Test the end-to-end story generation process by invoking the Lambda function directly.
+"""
 
 # Set environment variables
 os.environ['AWS_REGION'] = 'us-east-1'

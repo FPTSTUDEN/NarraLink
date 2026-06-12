@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#ingest/event_publisher.py
 """
 Event ingestion library for sending user events to Kinesis.
 Supports local development with AWS emulator.

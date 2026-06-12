@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ingest/http_bridge.py
 """
 HTTP bridge to accept events from browser extensions, mobile apps, and webhooks.
 Runs a simple Flask server that forwards to Kinesis.
