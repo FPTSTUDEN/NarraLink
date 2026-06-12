@@ -22,6 +22,7 @@ services:
       - ./data/dynamodb:/data/dynamodb
       - ./data/lambda:/data/lambda
       - ./processor:/lambda-mount  # Mount local lambda code
+    restart: unless-stopped
     networks:
       - narrative-network
     healthcheck:
@@ -57,6 +58,7 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
+    restart: unless-stopped
     depends_on:
       aws-emulator:
         condition: service_healthy
@@ -68,12 +70,33 @@ services:
     image: minio/mc:latest
     container_name: narrative-s3-client
     entrypoint: sleep infinity
+    restart: unless-stopped
     depends_on:
       aws-emulator:
         condition: service_healthy
     networks:
       - narrative-network
-
+  # HTTP bridge for events
+  # http-bridge:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.bridge
+  #   container_name: narrative-http-bridge
+  #   ports:
+  #     - "5001:5001"
+  #   environment:
+  #     - AWS_ENDPOINT_URL=http://aws-emulator:4566
+  #     - AWS_REGION=us-east-1
+  #     - AWS_ACCESS_KEY_ID=test
+  #     - AWS_SECRET_ACCESS_KEY=test
+  #   depends_on:
+  #     aws-emulator:
+  #       condition: service_healthy
+  #   networks:
+  #     - narrative-network
+  #   volumes:
+  #     - ./ingest:/app/ingest
+  #   restart: unless-stopped
 networks:
   narrative-network:
     driver: bridge

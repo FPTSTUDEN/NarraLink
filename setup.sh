@@ -115,11 +115,12 @@ aws_cmd dynamodb create-table \
 
 # 4. Create Lambda function (will be updated with code later)
 echo "⚡ Creating Lambda function: narrative-generator"
-cat > /tmp/lambda-init.py << 'EOF'
-def lambda_handler(event, context):
-    print("Lambda initialized. Waiting for deployment...")
-    return {"statusCode": 200, "body": "Ready"}
-EOF
+# cat > /tmp/lambda-init.py << 'EOF'
+# def lambda_handler(event, context):
+#     print("Lambda initialized. Waiting for deployment...")
+#     return {"statusCode": 200, "body": "Ready"}
+# EOF
+cp ./processor/lambda_function.py /tmp/lambda-init.py
 
 zip -j /tmp/lambda-init.zip /tmp/lambda-init.py 2>/dev/null
 
