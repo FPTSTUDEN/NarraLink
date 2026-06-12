@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Main AWS emulator
+  aws-emulator:
+    image: floci/floci:latest
+    container_name: narrative-aws-emulator
+    ports:
+      - "4566:4566"      # AWS service endpoints
+      - "4510-4559:4510-4559"  # Service-specific ports
+    environment:
+      # Persistence
+      - FLOCI_STORAGE_MODE=persistent
+      - FLOCI_DATA_DIR=/data
+      # Logging
+      - FLOCI_LOG_LEVEL=info
+      # Lambda configuration for local development
+      - FLOCI_LAMBDA_RUNTIME=provided.al2
+      - FLOCI_LAMBDA_CONTAINER_RUNTIME=docker
+    volumes:
+      - ./data/s3:/data/s3
+      - ./data/dynamodb:/data/dynamodb
+      - ./data/lambda:/data/lambda
+      - ./processor:/lambda-mount  # Mount local lambda code
+    networks:
+      - narrative-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_floci/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 2s
+
+  # Optional: Local LLM for story generation
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: narrative-ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ./data/ollama:/root/.ollama
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0
+  #     - OLLAMA_KEEP_ALIVE=24h
+  #   networks:
+  #     - narrative-network
+  #   command: serve
+
+  # Optional: Admin UI for debugging
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin
+    container_name: narrative-dynamodb-admin
+    ports:
+      - "8001:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://aws-emulator:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      aws-emulator:
+        condition: service_healthy
+    networks:
+      - narrative-network
+
+  # Optional: S3 web interface
+  s3-browser:
+    image: minio/mc:latest
+    container_name: narrative-s3-client
+    entrypoint: sleep infinity
+    depends_on:
+      aws-emulator:
+        condition: service_healthy
+    networks:
+      - narrative-network
+
+networks:
+  narrative-network:
+    driver: bridge
