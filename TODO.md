@@ -1,6 +1,9 @@
 # asdfasd
-- [ ] refactor (fix lambda fallback, apply new lambda)
-- [ ] bedrock
+- [x] refactor (fix lambda fallback, apply new lambda)
+- [ ] consistent username
+- [x] **bedrock**
+- [ ] **update resources (Bedrock Lambda) instead of failing**
+- [ ] **check script**
 - [ ] phone integration
 - [ ] computer integration
 - [ ] Python scripts

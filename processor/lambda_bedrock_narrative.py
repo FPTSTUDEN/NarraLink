@@ -18,6 +18,32 @@ BUCKET_NAME = os.getenv('BUCKET_NAME', 'narrative-store')
 BEDROCK_MODEL_ID = os.getenv('BEDROCK_MODEL_ID', 'anthropic.claude-3-sonnet-20240229-v1:0')
 STORY_TONE = os.getenv('STORY_TONE', 'reflective')
 
+def get_bedrock_client():
+    """Get configured Bedrock client based on environment"""
+    IS_LOCAL = os.environ.get("IS_LOCAL", "false").lower() == "true"
+    
+    if IS_LOCAL:
+        # Points to our local LiteLLM proxy mimicking Bedrock
+        return boto3.client(
+            service_name="bedrock-runtime",
+            region_name="us-east-1",
+            endpoint_url="http://localhost:8000", 
+            aws_access_key_id="mock_key",
+            aws_secret_access_key="mock_secret"
+        )
+    else:
+        # Standard production config for AWS cloud environment
+        return boto3.client(service_name="bedrock-runtime")
+
+def get_model_id():
+    """Get appropriate model ID based on environment"""
+    IS_LOCAL = os.environ.get("IS_LOCAL", "false").lower() == "true"
+    
+    if IS_LOCAL:
+        return "ollama/tinyllama"  # Local model
+    else:
+        return BEDROCK_MODEL_ID  # Production model from env var
+
 def lambda_handler(event, context):
     """Handle narrative generation requests"""
     action = event.get('action', 'generate_daily')
@@ -87,7 +113,9 @@ def generate_daily_narrative(user_id: str, date: str) -> Dict:
 
 def call_bedrock(user_id: str, date: str, events: List[Dict]) -> str:
     """Call Amazon Bedrock to generate narrative"""
-    bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
+    # Get configured client and model ID
+    bedrock = get_bedrock_client()
+    model_id = get_model_id()
     
     # Prepare events summary
     events_text = '\n'.join([
@@ -109,7 +137,7 @@ Write a compelling story that:
 Story:"""
 
     response = bedrock.invoke_model(
-        modelId=BEDROCK_MODEL_ID,
+        modelId=model_id,
         contentType='application/json',
         accept='application/json',
         body=json.dumps({
