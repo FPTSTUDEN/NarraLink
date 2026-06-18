@@ -17,7 +17,8 @@ def send_test_events():
     publisher = EventPublisher()
     builder = EventBuilder()
     
-    user_id = "test-user-" + datetime.now().strftime("%Y%m%d")
+    # user_id = "test-user-" + datetime.now().strftime("%Y%m%d")
+    user_id = "test-user"  # Replace with actual user ID for testing
     
     print(f"Sending test events for user: {user_id}\n")
     

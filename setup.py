@@ -26,6 +26,7 @@ KINESIS_STREAM = os.getenv('STREAM_NAME', 'user-events')
 DYNAMODB_TABLE = os.getenv('TABLE_NAME', 'narrative-state')
 DYNAMODB_PREFS = 'narrative-preferences'
 LAMBDA_NAME = 'narrative-generator'
+BEDROCK_LAMBDA_NAME = 'narrative-bedrock-generator'
 
 class NarrativeInfrastructure:
     def __init__(self):
@@ -245,6 +246,82 @@ class NarrativeInfrastructure:
             logger.info("\n✅ All tests passed!")
         return all_passed
     
+
+    def create_bedrock_lambda(self):
+        """Create separate Lambda for Bedrock narrative generation"""
+        try:
+            lambda_file = Path(__file__).parent / 'processor' / 'lambda_bedrock_narrative.py'
+            if not lambda_file.exists():
+                logger.error("lambda_bedrock_narrative.py not found")
+                return False
+            
+            # Create deployment package
+            with tempfile.NamedTemporaryFile(mode='wb', suffix='.zip', delete=False) as tmp:
+                with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    zipf.write(lambda_file, 'lambda_function.py')
+                zip_path = tmp.name
+            
+            # Create function with higher memory for Bedrock
+            try:
+                self.lambda_client.get_function(FunctionName=BEDROCK_LAMBDA_NAME)
+                logger.info("✓ Bedrock narrative generator Lambda already exists")
+            except self.lambda_client.exceptions.ResourceNotFoundException:
+                with open(zip_path, 'rb') as f:
+                    self.lambda_client.create_function(
+                        FunctionName='narrative-bedrock-generator',
+                        Runtime='python3.11',
+                        Role='arn:aws:iam::000000000000:role/lambda-role',
+                        Handler='lambda_function.lambda_handler',
+                        Code={'ZipFile': f.read()},
+                        Environment={'Variables': {
+                            'TABLE_NAME': DYNAMODB_TABLE,
+                            'BUCKET_NAME': S3_BUCKET,
+                            'BEDROCK_MODEL_ID': 'anthropic.claude-3-sonnet-20240229-v1:0',
+                            'STORY_TONE': 'reflective'
+                        }},
+                        Timeout=600,  # 10 minutes for Bedrock
+                        MemorySize=1769  # Optimal for ML workloads
+                    )
+                
+                logger.info("✓ Created Bedrock narrative generator Lambda")
+            os.unlink(zip_path)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to create Bedrock Lambda: {e}")
+            return False
+    
+    def create_eventbridge_trigger(self):
+        """Schedule nightly narrative generation"""
+        events = boto3.client('events', endpoint_url=ENDPOINT_URL)
+        
+        # Create rule for daily trigger at 2 AM
+        try:
+            events.put_rule(
+                Name='daily-narrative-generation',
+                ScheduleExpression='cron(0 2 * * ? *)',
+                State='ENABLED'
+            )
+            
+            # Add target to trigger Bedrock Lambda
+            events.put_targets(
+                Rule='daily-narrative-generation',
+                Targets=[{
+                    'Id': '1',
+                    'Arn': f'arn:aws:lambda:{REGION}:000000000000:function:narrative-bedrock-generator',
+                    'Input': json.dumps({
+                        'action': 'generate_daily',
+                        'user_id': 'all-users'  # Will need to iterate through users
+                    })
+                }]
+            )
+            
+            logger.info("✓ Created EventBridge schedule for daily narratives")
+            return True
+        except Exception as e:
+            logger.warning(f"Could not create EventBridge trigger: {e}")
+            return False
+    
+
     def setup_all(self):
         """Run complete setup"""
         logger.info("="*60)
@@ -255,8 +332,11 @@ class NarrativeInfrastructure:
             ("S3 Bucket", self.create_s3_bucket),
             ("Kinesis Stream", self.create_kinesis_stream),
             ("DynamoDB Tables", self.create_dynamodb_tables),
-            ("Lambda Function", self.create_lambda_function),
+            ("Original Lambda Function", self.create_lambda_function),
+            ("Bedrock Lambda Function", self.create_bedrock_lambda),
             ("Event Source Mapping", self.create_event_source_mapping)
+            # ,
+            # ("EventBridge Trigger", self.create_eventbridge_trigger)
         ]
         
         for name, step in steps:
@@ -277,7 +357,8 @@ class NarrativeInfrastructure:
         logger.info(f"S3 Bucket:       s3://{S3_BUCKET}")
         logger.info(f"Kinesis Stream:  {KINESIS_STREAM}")
         logger.info(f"DynamoDB Tables: {DYNAMODB_TABLE}, {DYNAMODB_PREFS}")
-        logger.info(f"Lambda Function: {LAMBDA_NAME}")
+        logger.info(f"Original Lambda Function: {LAMBDA_NAME}")
+        logger.info(f"Bedrock Lambda Function: {BEDROCK_LAMBDA_NAME}")
         logger.info(f"Trigger:         Kinesis → Lambda (ACTIVE)")
 
 def main():

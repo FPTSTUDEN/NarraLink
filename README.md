@@ -31,10 +31,10 @@ flowchart LR
 
     subgraph Output["Output"]
         JOURNAL["Daily Journal<br/>Markdown/HTML"]
-        STORY["Bedrock<br/>(Local GenAI)"]
+        STORY["Bedrock<br/>(Local Ollama)"]
     end
 
-    PC -->|"SDK/CLI"| KIN
+    PC -->|"SDK/CLI/HTTP Bridge"| KIN
     KIN -->|"Trigger"| LAM
     LAM -->|"Store"| S3
     LAM -->|"Read/Write"| DDB
