@@ -34,7 +34,10 @@ resource "aws_lambda_function" "narrative_generator" {
 # Bedrock Lambda Function
 data "archive_file" "bedrock_lambda_function" {
   type        = "zip"
-  source_file = "${path.module}/processor/lambda_bedrock_narrative.py"
+  source {
+    content  = file("${path.module}/processor/lambda_bedrock_narrative.py")
+    filename = "lambda_function.py"
+  }
   output_path = "${path.module}/bedrock_lambda_function.zip"
 }
 
