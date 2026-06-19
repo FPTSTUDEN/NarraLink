@@ -1,3 +1,4 @@
+import uvicorn
 import json
 from io import BytesIO
 
@@ -71,3 +72,6 @@ async def invoke_model(model_id: str, request: Request):
         content=json.dumps(bedrock_response),
         media_type="application/json"
     )
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=4000)
