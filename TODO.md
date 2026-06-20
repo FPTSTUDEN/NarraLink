@@ -3,7 +3,7 @@
 - [x] consistent username
 - [ ] test params stored in env
 - [x] **bedrock**
-- [ ] **update resources (Bedrock Lambda) instead of failing**
+- [x] **update resources (Bedrock Lambda) instead of failing**
 - [ ] **check (monitor-cli) & test script (sdk)**
 - [ ] phone integration
 - [ ] computer integration
