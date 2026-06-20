@@ -11,13 +11,13 @@ app = FastAPI()
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 MODEL_MAP = {
-    "ollama/tinyllama": "tinyllama",
+    "ollama.tinyllama": "tinyllama",
     "anthropic.claude-3-sonnet-20240229-v1:0": "tinyllama",
     # Add more mappings as needed
 }
 
 
-@app.post("/model/{model_id:path}/invoke")
+@app.post("/model/{model_id}/invoke")
 async def invoke_model(model_id: str, request: Request):
     body = await request.json()
 

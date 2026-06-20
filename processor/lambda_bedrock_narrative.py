@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 TABLE_NAME = os.getenv('TABLE_NAME', 'narrative-state')
 BUCKET_NAME = os.getenv('BUCKET_NAME', 'narrative-store')
 BEDROCK_MODEL_ID = os.getenv('BEDROCK_MODEL_ID', 'anthropic.claude-3-sonnet-20240229-v1:0')
-BEDROCK_RUNTIME_ENDPOINT = os.getenv('BEDROCK_RUNTIME_ENDPOINT', 'http://localhost:4000')
+BEDROCK_RUNTIME_ENDPOINT = os.getenv('BEDROCK_RUNTIME_ENDPOINT', 'http://host.docker.internal:4000')
 STORY_TONE = os.getenv('STORY_TONE', 'reflective')
 
 
@@ -54,7 +54,7 @@ def get_model_id():
     IS_LOCAL = os.environ.get("IS_LOCAL", "true").lower() == "true"
     
     if IS_LOCAL:
-        return "ollama/tinyllama"  # Local model
+        return "ollama.tinyllama"  # Local model
     else:
         return BEDROCK_MODEL_ID  # Production model from env var
 
