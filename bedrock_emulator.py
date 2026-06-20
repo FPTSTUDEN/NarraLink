@@ -1,3 +1,4 @@
+import uvicorn
 import json
 from io import BytesIO
 
@@ -10,13 +11,13 @@ app = FastAPI()
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 MODEL_MAP = {
-    "ollama/tinyllama": "tinyllama",
+    "ollama.tinyllama": "tinyllama",
     "anthropic.claude-3-sonnet-20240229-v1:0": "tinyllama",
     # Add more mappings as needed
 }
 
 
-@app.post("/model/{model_id:path}/invoke")
+@app.post("/model/{model_id}/invoke")
 async def invoke_model(model_id: str, request: Request):
     body = await request.json()
 
@@ -71,3 +72,6 @@ async def invoke_model(model_id: str, request: Request):
         content=json.dumps(bedrock_response),
         media_type="application/json"
     )
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=4000)
